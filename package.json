@@ -9,9 +9,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "gstore-node": "^4.0.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/node": "^9.6.2"
   }

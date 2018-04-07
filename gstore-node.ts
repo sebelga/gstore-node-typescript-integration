@@ -66,7 +66,8 @@ declare namespace GstoreNode {
          * @param {string} entityKind The Google Entity Kind
          * @returns {Model} A gstore Model
          */
-        model(entityKind: string, schema: Schema): typeof Model;
+        // model<T = SchemaPath>(entityKind: string, schema: Schema): (typeof Model<T>);
+        model<T = {[propName: string]: any}>(entityKind: string, schema: Schema): Model<T>;
 
         /**
          * Create a DataLoader instance
@@ -94,9 +95,18 @@ declare namespace GstoreNode {
      *
      * @class Schema
      */
-    class Schema {
-        constructor(definition: { [propName: string]: SchemaDefinition }, options?: SchemaOptions);
+    class Schema<T = SchemaPath> {
+        // constructor(definition: { [propName: string]: SchemaDefinition }, options?: SchemaOptions);
+        constructor(
+            definition: {[P in keyof T]: SchemaDefinition<T[P]> },
+            options?: SchemaOptions);
 
+        /**
+         * Schema paths
+         *
+         * @type {{ [propName: string]: SchemaDefinition }}
+         */
+        readonly paths: {[P in keyof T]: SchemaDefinition<T[P]> }
         /**
          * Add custom methods to entities.
          * @link https://sebelga.gitbooks.io/gstore-node/content/schema/custom-methods.html
@@ -108,7 +118,7 @@ declare namespace GstoreNode {
          * }
          * ```
          */
-        methods: { [propName: string]: () => any }
+        readonly methods: { [propName: string]: () => any }
 
         /**
          * Getter / Setter for Schema paths.
@@ -117,7 +127,7 @@ declare namespace GstoreNode {
          * @param {SchemaDefinition} [definition] The property definition
          * @link https://sebelga.gitbooks.io/gstore-node/content/schema/schema-methods/path.html
          */
-        path(propName: string, definition?: SchemaDefinition): void;
+        path(propName: string, definition?: SchemaDefinition<any>): void;
 
         /**
          * Getter / Setter of a virtual property.
@@ -152,19 +162,14 @@ declare namespace GstoreNode {
         post(method: string, callback: (response: any) => Promise<any>): void;
     }
 
-    /**
-     * gstore-node Model
-     *
-     * @class Model
-     */
-    class Model extends Entity {
+    interface Model<T = {[propName: string]: any}> {
         /**
          * gstore-node instance
          *
          * @static
          * @type {Gstore}
          */
-        static gstore: Gstore;
+        gstore: Gstore;
 
         /**
          * The Model Schema
@@ -172,7 +177,7 @@ declare namespace GstoreNode {
          * @static
          * @type {Schema}
          */
-        static schema: Schema;
+        schema: Schema;
 
         /**
          * The Model Datastore Entity Kind
@@ -180,7 +185,7 @@ declare namespace GstoreNode {
          * @static
          * @type {string}
          */
-        static entityKind: string;
+        entityKind: string;
 
         /**
          * Creates an entity, instance of the Model.
@@ -189,14 +194,12 @@ declare namespace GstoreNode {
          * @param {(Array<string | number>)} [ancestors] The entity Ancestors
          * @param {string} [namespace] The entity Namespace
          */
-        constructor(
-            data: { [propName: string]: any },
+        new (
+            data: { [P in keyof T]: T[P] },
             id?: string | number,
             ancestors?: Array<string | number>,
             namespace?: string,
-        )
-
-        // TODO: Check how to return an Entity<T> of with the Schema props passed
+        ): Entity<T> & { [P in keyof T]: T[P] };
 
         /**
          * Fetch an Entity by KEY from the Datastore
@@ -209,7 +212,7 @@ declare namespace GstoreNode {
          * @returns {Promise<any>} The entity fetched from the Datastore
          * @link https://sebelga.gitbooks.io/gstore-node/content/model/get.html
          */
-        static get(
+        get(
             id: string | number | string[] | number[],
             ancestors?: Array<string | number>,
             namespace?: string,
@@ -248,9 +251,7 @@ declare namespace GstoreNode {
                  */
                 ttl?: number | { [propName: string] : number }
             }
-        ): Promise<any>;
-
-        // TODO: Check how to return an Entity<T> of with the Schema props passed
+        ): Promise<Entity<T> & { [P in keyof T]: T[P] }>;
 
         /**
          * Update an Entity in the Datastore
@@ -265,7 +266,7 @@ declare namespace GstoreNode {
          * @returns {Promise<any>} The entity updated in the Datastore
          * @link https://sebelga.gitbooks.io/gstore-node/content/model/update-method.html
          */
-        static update(
+        update(
             id: string | number,
             data: any,
             ancestors?: Array<string | number>,
@@ -288,7 +289,7 @@ declare namespace GstoreNode {
                  */
                 replace?: boolean
             }
-        ): Promise<any>;
+        ): Promise<Entity<T> & { [P in keyof T]: T[P] }>;
 
         /**
          * Delete an Entity from the Datastore
@@ -302,7 +303,7 @@ declare namespace GstoreNode {
          * @returns {Promise<{ success: boolean, key: DatastoreKey, apiResponse: any }>}
          * @link https://sebelga.gitbooks.io/gstore-node/content/model/delete.html
          */
-        static delete(
+        delete(
             id?: string | number,
             ancestors?: Array<string | number>,
             namespace?: string,
@@ -317,7 +318,7 @@ declare namespace GstoreNode {
          * @param {(string | string[])} propName Property name (can be one or an Array of properties)
          * @link https://sebelga.gitbooks.io/gstore-node/content/model/other-methods.html
          */
-        static excludeFromIndexes(propName: string | string[]): void;
+        excludeFromIndexes(propName: string | string[]): void;
 
         /**
          * Generates one or several entity key(s) for the Model.
@@ -329,7 +330,7 @@ declare namespace GstoreNode {
          * @returns {DatastoreKey}
          * @link https://sebelga.gitbooks.io/gstore-node/content/model/key.html
          */
-        static key(
+        key(
             id: string | number,
             ancestors?: Array<string | number>,
             namespace?: string,
@@ -342,7 +343,7 @@ declare namespace GstoreNode {
          * @returns {*} The data sanitized
          * @link https://sebelga.gitbooks.io/gstore-node/content/model/sanitize.html
          */
-        static sanitize(data: { [propName: string]: any }): { [propName: string]: any };
+        sanitize(data: { [propName: string]: any }): { [P in keyof T]: T[P] };
 
         /**
          * Clear all the Queries from the cache *linked* to the Model Entity Kind. You can also pass one or several keys to delete from the cache.  
@@ -353,7 +354,7 @@ declare namespace GstoreNode {
          * @returns {Promise<void>}
          * @link https://sebelga.gitbooks.io/gstore-node/content/model/clearcache.html
          */
-        static clearCache(keys?: DatastoreKey | DatastoreKey[]): Promise<void>;
+        clearCache(keys?: DatastoreKey | DatastoreKey[]): Promise<void>;
 
         /**
          * Initialize a Datastore Query for the Model's entity Kind
@@ -364,10 +365,10 @@ declare namespace GstoreNode {
          * @returns {DatastoreQuery} A Datastore Query instance
          * @link https://sebelga.gitbooks.io/gstore-node/content/queries/google-cloud-queries.html
          */
-        static query(
+        query(
             namespace?: string,
             transaction?: DatastoreTransaction,
-        ): DatastoreQueryCustom;
+        ): DatastoreQueryCustom<T>;
 
         /**
          * Shortcut for listing entities from a Model. List queries are meant to quickly list entities with predefined settings without having to create Query instances.
@@ -377,9 +378,9 @@ declare namespace GstoreNode {
          * @returns {Promise<any>}
          * @link https://sebelga.gitbooks.io/gstore-node/content/queries/list.html
          */
-        static list(
+        list(
             options?: QueryOptions & QueryListOptions
-        ): Promise<any>;
+        ): Promise<{ entities: Array<Entity<T> & { [P in keyof T]: T[P] }>, nextPageCursor: string }>;
 
         /**
          * Quickly find an entity by passing key/value pairs.
@@ -396,7 +397,7 @@ declare namespace GstoreNode {
          * @returns {Promise<any>}
          * @link https://sebelga.gitbooks.io/gstore-node/content/queries/findone.html
          */
-        static findOne(
+        findOne(
             keyValues: { [propName: string]: any },
             ancestors?: Array<string | number>,
             namespace?: string,
@@ -415,7 +416,7 @@ declare namespace GstoreNode {
          * @returns {Promise<{ success: boolean; message: 'string' }>}
          * @link https://sebelga.gitbooks.io/gstore-node/content/queries/deleteall.html
          */
-        static deleteAll(
+        deleteAll(
             ancestors?: Array<string | number>,
             namespace?: string
         ): Promise<{ success: boolean; message: 'string' }>;
@@ -435,14 +436,14 @@ declare namespace GstoreNode {
          ```
          * @link https://sebelga.gitbooks.io/gstore-node/content/queries/findaround.html
          */
-        static findAround(
+        findAround(
             propName: string,
             value: any,
             options: { before: number, readAll?:boolean, format?: 'JSON' | 'ENTITY', showKey?: boolean } | { after: number, readAll?:boolean, format?: 'JSON' | 'ENTITY', showKey?: boolean } & QueryOptions
-        ): Promise<any>;
+        ): Promise<{ entities: Array<Entity<T> & { [P in keyof T]: T[P] }>}>
     }
 
-    class Entity {
+    class Entity<T = {[propName: string]: any}> {
         /**
          * gstore-node instance
          *
@@ -476,7 +477,7 @@ declare namespace GstoreNode {
          *
          * @type {*}
          */
-        entityData: any;
+        entityData: {[P in keyof T]: T[P]};
 
         /**
          * Save the entity in the Datastore
@@ -494,7 +495,7 @@ declare namespace GstoreNode {
              * @default 'upsert'
              */
             method?: 'upsert' | 'insert' | 'update'
-        }): Promise<any>;
+        }): Promise<Entity<T> & { [P in keyof T]: T[P] }>;
 
         /**
          * Return the entity data object with the entity id.  The properties on the Schema where "read" has been set to "false" won't be included unless you set "readAll" to "true" in the options.
@@ -524,7 +525,7 @@ declare namespace GstoreNode {
              * @type {boolean}
              * @default false
              */
-            showKey?: boolean }): any;
+            showKey?: boolean }): { [P in keyof T]: T[P] } & { [propName: string]: any };
 
         /**
          * Access a Model from an entity
@@ -539,14 +540,14 @@ declare namespace GstoreNode {
          ```
          * @link https://sebelga.gitbooks.io/gstore-node/content/entity/methods/model.html
          */
-        model(entityKind: string): typeof Model;
+        model<T = {[propName: string]: any}>(entityKind: string): Model<T>;
 
         /**
          * Fetch the entity data from the Datastore and merge it in the entity.
          *
          * @returns {Promise<any>}
          */
-        datastoreEntity(): Promise<any>;
+        datastoreEntity(): Promise<Entity<T> & { [P in keyof T]: T[P] }>;
 
         /**
          * Validate the entity data. It returns an object with "error" and "value" properties.  If the error is null, it is valid. The value returned is the entityData sanitized (unknown properties removed).
@@ -556,7 +557,9 @@ declare namespace GstoreNode {
         validate(): Validation | Promise<any>;
     }
 
-    // --interfaces
+    // -----------------------------------------------------------------------
+    // -- INTERFACES
+    // -----------------------------------------------------------------------
 
     /**
      * gstore-node instance configuration
@@ -603,8 +606,12 @@ declare namespace GstoreNode {
 
     type PropType = 'string' | 'int' | 'double' | 'boolean' | 'datetime' | 'array' | 'object' | 'geoPoint' | 'buffer';
 
-    interface SchemaDefinition {
-        type?: PropType;
+    interface SchemaPath<T = any> {
+        [propName: string]: SchemaDefinition<T>;
+    }
+
+    interface SchemaDefinition<T> {
+        type?: T;
         validate?: string | { rule: string | ((...args: any[]) => boolean), args: any[] };
         optional?: boolean;
         default?: any;
@@ -797,7 +804,7 @@ declare namespace GstoreNode {
         start(cursorToken: string): DatastoreQuery;
     }
 
-    interface DatastoreQueryCustom extends DatastoreQuery {
+    interface DatastoreQueryCustom<T> extends DatastoreQuery {
         run(
             options?: {
                 /**
@@ -808,7 +815,7 @@ declare namespace GstoreNode {
                  */
                 consistency?: 'strong' | 'eventual'
             } & QueryOptions
-        ): Promise<any>;
+        ): Promise<{ entities: Array<Entity<T> & { [P in keyof T]: T[P] }>, nextPageCursor: string }>;
     }
 
     interface DataLoader {
