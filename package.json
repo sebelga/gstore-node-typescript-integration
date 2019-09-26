@@ -1,16 +1,14 @@
 {
-  "name": "gstore-node-typescript-integration",
+  "name": "gstore-node-ts-integration",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {},
   "devDependencies": {
-    "@types/node": "^9.6.2"
+    "typescript": "^3.6.3"
   }
 }

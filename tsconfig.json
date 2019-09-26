@@ -1,28 +1,26 @@
 {
   "compilerOptions": {
-    "target": "ES6",
-    "baseUrl": "./",
-    "strict": true,
-    "module": "commonjs",
     "moduleResolution": "node",
+    "target": "es6",
+    "module": "commonjs",
+    "allowSyntheticDefaultImports": true,
+    "lib": ["esnext"],
+    "strict": true,
     "removeComments": false,
-    "noImplicitThis": false,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "declaration": true,
     "sourceMap": true,
-    "typeRoots": [
-        "./typings/*",
-        "./node_modules/@types/*",
+    "rootDir": "src",
+    "outDir": "lib",
+    "types": [
+      "node",
+      "jest"
     ],
-    "paths": {
-        "*": ["typings/*", "*"],
-    },
-    "outDir": "./dist",
+    "allowJs": false
   },
   "include": [
-    "typings",
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
+    "src",
     "typings"
   ]
 }
